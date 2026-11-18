@@ -1,3 +1,5 @@
+using Takwene.Domain.Interfaces;
+
 namespace Takwene.Domain.Common;
 
 public abstract class BaseEntity : IAuditableEntity

@@ -13,6 +13,6 @@ public static class AuthErrors
     public static readonly Error InvalidRefreshToken =
         Error.Unauthorized("Auth.InvalidRefreshToken", "The refresh token is invalid, expired or revoked.");
 
-    public static Error RegistrationFailed(string details) =>
-        Error.Validation("Auth.RegistrationFailed", details);
+    public static Error UserCreationFailed(string details) =>
+        Error.Validation("Auth.UserCreationFailed", details);
 }

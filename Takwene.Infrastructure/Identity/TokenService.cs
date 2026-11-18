@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using Takwene.Application.Common;
 
 namespace Takwene.Infrastructure.Identity;
 
@@ -12,7 +13,11 @@ internal sealed class TokenService(IOptions<JwtOptions> options)
     private readonly JwtOptions _options = options.Value;
     private readonly JsonWebTokenHandler _handler = new();
 
-    public (string Token, DateTime ExpiresAt) CreateAccessToken(ApplicationUser user, IEnumerable<string> roles)
+    public (string Token, DateTime ExpiresAt) CreateAccessToken(
+        ApplicationUser user,
+        IEnumerable<string> roles,
+        IEnumerable<string> permissions,
+        Guid? artistId)
     {
         var expiresAt = DateTime.UtcNow.AddMinutes(_options.AccessTokenMinutes);
 
@@ -24,6 +29,10 @@ internal sealed class TokenService(IOptions<JwtOptions> options)
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
         claims.AddRange(roles.Select(role => new Claim(AuthClaimTypes.Role, role)));
+        claims.AddRange(permissions.Select(permission => new Claim(Permissions.ClaimType, permission)));
+
+        if (artistId is not null)
+            claims.Add(new Claim(AuthClaimTypes.ArtistId, artistId.Value.ToString()));
 
         var descriptor = new SecurityTokenDescriptor
         {
@@ -43,11 +52,4 @@ internal sealed class TokenService(IOptions<JwtOptions> options)
     public static string CreateRefreshToken() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
 
     public static string Hash(string token) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
-}
-
-// Short claim names, kept as-is because inbound claim mapping is turned off.
-internal static class AuthClaimTypes
-{
-    public const string Name = "name";
-    public const string Role = "role";
 }

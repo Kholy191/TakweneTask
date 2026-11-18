@@ -1,0 +1,30 @@
+[
+  {
+    "id": "10000000-0000-0000-0000-000000000001",
+    "fullName": "Takwene Admin",
+    "email": "admin@takwene.com",
+    "password": "Admin@12345",
+    "role": "Admin"
+  },
+  {
+    "id": "10000000-0000-0000-0000-000000000002",
+    "fullName": "Amr Diab",
+    "email": "amr@takwene.com",
+    "password": "Artist@12345",
+    "role": "Artist"
+  },
+  {
+    "id": "10000000-0000-0000-0000-000000000003",
+    "fullName": "Cairokee",
+    "email": "cairokee@takwene.com",
+    "password": "Artist@12345",
+    "role": "Artist"
+  },
+  {
+    "id": "10000000-0000-0000-0000-000000000004",
+    "fullName": "Wegz",
+    "email": "wegz@takwene.com",
+    "password": "Artist@12345",
+    "role": "Artist"
+  }
+]

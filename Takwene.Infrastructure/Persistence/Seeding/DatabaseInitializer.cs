@@ -1,11 +1,8 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using Takwene.Application.Common;
-using Takwene.Infrastructure.Identity;
+using Takwene.Domain.Entities;
 
 namespace Takwene.Infrastructure.Persistence.Seeding;
 
@@ -24,10 +21,15 @@ public static class DatabaseInitializer
         var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(DatabaseInitializer));
 
         await MigrateAsync(context, logger, cancellationToken);
-        await SeedDefaultAdminAsync(provider, logger);
 
-        // Add JSON seeds here once entities exist, e.g.:
-        // await JsonDataSeeder.SeedAsync<Artist>(context, "artists.json", cancellationToken);
+        // Order matters: users before artists (UserId), artists and DSPs before tracks and distributions.
+        await ActivatorUtilities.CreateInstance<IdentitySeeder>(provider).SeedAsync(cancellationToken);
+        await JsonDataSeeder.SeedAsync<Artist>(context, "artists.json", cancellationToken);
+        await JsonDataSeeder.SeedAsync<Dsp>(context, "dsps.json", cancellationToken);
+        await JsonDataSeeder.SeedAsync<Track>(context, "tracks.json", cancellationToken);
+        await JsonDataSeeder.SeedAsync<TrackDistribution>(context, "distributions.json", cancellationToken);
+
+        logger.LogInformation("Database seeding completed");
     }
 
     // Retries because PostgreSQL may still be starting (e.g. right after docker compose up).
@@ -47,42 +49,5 @@ public static class DatabaseInitializer
                 await Task.Delay(RetryDelay, cancellationToken);
             }
         }
-    }
-
-    // Credentials come from the "DefaultAdmin" config section; skipped when not configured.
-    private static async Task SeedDefaultAdminAsync(IServiceProvider provider, ILogger logger)
-    {
-        var configuration = provider.GetRequiredService<IConfiguration>();
-        var email = configuration["DefaultAdmin:Email"];
-        var password = configuration["DefaultAdmin:Password"];
-
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-            return;
-
-        var roleManager = provider.GetRequiredService<RoleManager<IdentityRole>>();
-        if (!await roleManager.RoleExistsAsync(Roles.Admin))
-            await roleManager.CreateAsync(new IdentityRole(Roles.Admin));
-
-        var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
-        if (await userManager.FindByEmailAsync(email) is not null)
-            return;
-
-        var admin = new ApplicationUser
-        {
-            UserName = email,
-            Email = email,
-            FullName = "Takwene Admin",
-            EmailConfirmed = true
-        };
-
-        var result = await userManager.CreateAsync(admin, password);
-        if (!result.Succeeded)
-        {
-            logger.LogError("Default admin seeding failed: {Errors}", string.Join(" ", result.Errors.Select(e => e.Description)));
-            return;
-        }
-
-        await userManager.AddToRoleAsync(admin, Roles.Admin);
-        logger.LogInformation("Default admin {Email} created", email);
     }
 }

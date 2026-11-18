@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Takwene.Application.Auth;
 using Takwene.Application.Common;
+using Takwene.Application.Common.Errors;
+using Takwene.Application.DTOs.Auth;
 using Takwene.Application.Interfaces;
+using Takwene.Domain.Entities;
 using Takwene.Infrastructure.Persistence;
 
 namespace Takwene.Infrastructure.Identity;
@@ -18,23 +20,27 @@ internal sealed class AuthService(
 {
     private readonly JwtOptions _jwt = jwtOptions.Value;
 
-    public async Task<Result<string>> RegisterUserAsync(RegisterRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<string>> CreateUserAsync(string fullName, string email, string password, string role, CancellationToken cancellationToken = default)
     {
-        if (await userManager.FindByEmailAsync(request.Email) is not null)
+        if (await userManager.FindByEmailAsync(email) is not null)
             return AuthErrors.EmailAlreadyExists;
 
         var user = new ApplicationUser
         {
-            UserName = request.Email,
-            Email = request.Email,
-            FullName = request.FullName
+            UserName = email,
+            Email = email,
+            FullName = fullName
         };
 
-        var result = await userManager.CreateAsync(user, request.Password);
-        if (!result.Succeeded)
-            return AuthErrors.RegistrationFailed(string.Join(" ", result.Errors.Select(e => e.Description)));
+        var created = await userManager.CreateAsync(user, password);
+        if (!created.Succeeded)
+            return AuthErrors.UserCreationFailed(Describe(created));
 
-        logger.LogInformation("User {UserId} registered", user.Id);
+        var roleAdded = await userManager.AddToRoleAsync(user, role);
+        if (!roleAdded.Succeeded)
+            return AuthErrors.UserCreationFailed(Describe(roleAdded));
+
+        logger.LogInformation("User {UserId} created in role {Role}", user.Id, role);
         return user.Id;
     }
 
@@ -85,7 +91,15 @@ internal sealed class AuthService(
     private async Task<AuthResponse> IssueTokensAsync(ApplicationUser user, RefreshToken? replacedToken, CancellationToken cancellationToken)
     {
         var roles = await userManager.GetRolesAsync(user);
-        var (accessToken, accessTokenExpiresAt) = tokenService.CreateAccessToken(user, roles);
+        var permissions = await GetPermissionsAsync(user.Id, cancellationToken);
+
+        // Linked artist profile, if any, so the API can scope data without another lookup.
+        var artistId = await context.Set<Artist>()
+            .Where(a => a.UserId == user.Id)
+            .Select(a => (Guid?)a.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var (accessToken, accessTokenExpiresAt) = tokenService.CreateAccessToken(user, roles, permissions, artistId);
 
         var rawRefreshToken = TokenService.CreateRefreshToken();
         var now = DateTime.UtcNow;
@@ -115,6 +129,17 @@ internal sealed class AuthService(
             rawRefreshToken,
             refreshToken.ExpiresOn);
     }
+
+    // Permission claims of all the user's roles, in one query.
+    private Task<List<string>> GetPermissionsAsync(string userId, CancellationToken cancellationToken) =>
+        context.RoleClaims
+            .Where(rc => rc.ClaimType == Permissions.ClaimType
+                         && context.UserRoles.Any(ur => ur.UserId == userId && ur.RoleId == rc.RoleId))
+            .Select(rc => rc.ClaimValue!)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+    private static string Describe(IdentityResult result) => string.Join(" ", result.Errors.Select(e => e.Description));
 
     private Task<RefreshToken?> FindTokenAsync(string rawToken, bool includeUser, CancellationToken cancellationToken)
     {

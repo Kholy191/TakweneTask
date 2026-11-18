@@ -1,0 +1,83 @@
+[
+  {
+    "id": "40000000-0000-0000-0000-000000000001",
+    "title": "Ahla Ayam",
+    "artistId": "20000000-0000-0000-0000-000000000001",
+    "isrc": "EGTKW2600001",
+    "releaseDate": "2026-01-15",
+    "genre": "Pop",
+    "status": "Distributed"
+  },
+  {
+    "id": "40000000-0000-0000-0000-000000000002",
+    "title": "Sahran Leh",
+    "artistId": "20000000-0000-0000-0000-000000000001",
+    "isrc": "EGTKW2600002",
+    "releaseDate": "2026-03-01",
+    "genre": "Pop",
+    "status": "Submitted"
+  },
+  {
+    "id": "40000000-0000-0000-0000-000000000003",
+    "title": "Ya Habibi Taala",
+    "artistId": "20000000-0000-0000-0000-000000000001",
+    "isrc": "EGTKW2600003",
+    "releaseDate": "2026-06-20",
+    "genre": "Pop",
+    "status": "Draft"
+  },
+  {
+    "id": "40000000-0000-0000-0000-000000000004",
+    "title": "El Sekka Shemal",
+    "artistId": "20000000-0000-0000-0000-000000000002",
+    "isrc": "EGTKW2500004",
+    "releaseDate": "2025-11-10",
+    "genre": "Rock",
+    "status": "Distributed"
+  },
+  {
+    "id": "40000000-0000-0000-0000-000000000005",
+    "title": "Hawa Bahary",
+    "artistId": "20000000-0000-0000-0000-000000000002",
+    "isrc": "EGTKW2600005",
+    "releaseDate": "2026-02-14",
+    "genre": "Indie",
+    "status": "Submitted"
+  },
+  {
+    "id": "40000000-0000-0000-0000-000000000006",
+    "title": "Medan Tany",
+    "artistId": "20000000-0000-0000-0000-000000000002",
+    "isrc": "EGTKW2600006",
+    "releaseDate": "2026-07-01",
+    "genre": "Rock",
+    "status": "Draft"
+  },
+  {
+    "id": "40000000-0000-0000-0000-000000000007",
+    "title": "Bakht Gedid",
+    "artistId": "20000000-0000-0000-0000-000000000003",
+    "isrc": "EGTKW2500007",
+    "releaseDate": "2025-12-05",
+    "genre": "Rap",
+    "status": "Distributed"
+  },
+  {
+    "id": "40000000-0000-0000-0000-000000000008",
+    "title": "Dawsha",
+    "artistId": "20000000-0000-0000-0000-000000000003",
+    "isrc": "EGTKW2600008",
+    "releaseDate": "2026-04-10",
+    "genre": "Rap",
+    "status": "Submitted"
+  },
+  {
+    "id": "40000000-0000-0000-0000-000000000009",
+    "title": "Shaabi Flow",
+    "artistId": "20000000-0000-0000-0000-000000000003",
+    "isrc": "EGTKW2600009",
+    "releaseDate": "2026-08-15",
+    "genre": "Rap",
+    "status": "Draft"
+  }
+]

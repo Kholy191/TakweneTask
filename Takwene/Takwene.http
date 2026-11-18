@@ -1,27 +1,31 @@
 @Takwene_HostAddress = https://localhost:7000
 
-### Register
-POST {{Takwene_HostAddress}}/api/auth/register
-Content-Type: application/json
+# Seeded logins: admin@takwene.com / Admin@12345
+#                amr@takwene.com, cairokee@takwene.com, wegz@takwene.com / Artist@12345
+# Paste the accessToken from a login response here:
+@token = <accessToken>
 
-{
-  "fullName": "Test User",
-  "email": "test@takwene.local",
-  "password": "Test@12345"
-}
-
-### Login (seeded admin; copy accessToken and refreshToken from the response)
+### Login as admin
 POST {{Takwene_HostAddress}}/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@takwene.local",
+  "email": "admin@takwene.com",
   "password": "Admin@12345"
 }
 
-### Who am I
+### Login as an artist (Amr Diab)
+POST {{Takwene_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "amr@takwene.com",
+  "password": "Artist@12345"
+}
+
+### Who am I (roles, permissions, artist_id)
 GET {{Takwene_HostAddress}}/api/auth/me
-Authorization: Bearer <accessToken>
+Authorization: Bearer {{token}}
 
 ### Refresh (rotates: the old refresh token stops working)
 POST {{Takwene_HostAddress}}/api/auth/refresh
@@ -31,10 +35,88 @@ Content-Type: application/json
   "refreshToken": "<refreshToken>"
 }
 
-### Revoke (logout)
-POST {{Takwene_HostAddress}}/api/auth/revoke
+### Logout
+POST {{Takwene_HostAddress}}/api/auth/logout
 Content-Type: application/json
 
 {
   "refreshToken": "<refreshToken>"
+}
+
+### Create artist + login (admin). Omit "password" to get a temporary one back.
+POST {{Takwene_HostAddress}}/api/artists
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sherine",
+  "email": "sherine@takwene.com",
+  "country": "Egypt"
+}
+
+### List artists (admin)
+GET {{Takwene_HostAddress}}/api/artists?page=1&pageSize=20
+Authorization: Bearer {{token}}
+
+### List DSPs
+GET {{Takwene_HostAddress}}/api/dsps
+Authorization: Bearer {{token}}
+
+### List tracks (artists only ever get their own)
+GET {{Takwene_HostAddress}}/api/tracks?page=1&pageSize=20
+Authorization: Bearer {{token}}
+
+### Filter + search (search needs 3+ characters; matches title, artist name, ISRC)
+GET {{Takwene_HostAddress}}/api/tracks?genre=pop&status=Submitted&search=sah
+Authorization: Bearer {{token}}
+
+### Search too short -> 400
+GET {{Takwene_HostAddress}}/api/tracks?search=ab
+Authorization: Bearer {{token}}
+
+### Track details (seeded "Ahla Ayam" by Amr Diab)
+GET {{Takwene_HostAddress}}/api/tracks/40000000-0000-0000-0000-000000000001
+Authorization: Bearer {{token}}
+
+### Create track (artistId is required for admins, ignored for artists)
+POST {{Takwene_HostAddress}}/api/tracks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Leilet El Omr",
+  "isrc": "EG-TKW-26-00010",
+  "genre": "Pop",
+  "releaseDate": "2026-12-01",
+  "artistId": "20000000-0000-0000-0000-000000000001"
+}
+
+### Distribute "Ya Habibi Taala" (Draft) to Spotify + YouTube -> becomes Submitted
+POST {{Takwene_HostAddress}}/api/tracks/40000000-0000-0000-0000-000000000003/distribute
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "dspIds": [
+    "30000000-0000-0000-0000-000000000001",
+    "30000000-0000-0000-0000-000000000003"
+  ]
+}
+
+### Admin: mark "Sahran Leh" on Spotify as Live
+PATCH {{Takwene_HostAddress}}/api/tracks/40000000-0000-0000-0000-000000000002/distributions/50000000-0000-0000-0000-000000000004/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "Live"
+}
+
+### Mark "Sahran Leh" as Distributed (needs at least one Live distribution)
+PATCH {{Takwene_HostAddress}}/api/tracks/40000000-0000-0000-0000-000000000002/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "Distributed"
 }

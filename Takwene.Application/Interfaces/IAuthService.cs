@@ -1,13 +1,13 @@
-using Takwene.Application.Auth;
 using Takwene.Application.Common;
+using Takwene.Application.DTOs.Auth;
 
 namespace Takwene.Application.Interfaces;
 
 // The only gateway from Application to Identity; implemented in Infrastructure.
 public interface IAuthService
 {
-    // Returns the new user's id.
-    Task<Result<string>> RegisterUserAsync(RegisterRequest request, CancellationToken cancellationToken = default);
+    // Creates an Identity user in the given role; returns the new user's id.
+    Task<Result<string>> CreateUserAsync(string fullName, string email, string password, string role, CancellationToken cancellationToken = default);
 
     Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
 

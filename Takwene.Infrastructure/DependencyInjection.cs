@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Takwene.Application.Common;
 using Takwene.Application.Interfaces;
 using Takwene.Infrastructure.Identity;
 using Takwene.Infrastructure.Persistence;
@@ -36,6 +37,9 @@ public static class DependencyInjection
             .AddInterceptors(provider.GetRequiredService<AuditableEntitySaveChangesInterceptor>()));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Turns unique-index races (duplicate ISRC, DSP already distributed) into 409 instead of 500.
+        services.AddExceptionHandler<UniqueViolationExceptionHandler>();
     }
 
     private static void AddIdentityAndJwt(IServiceCollection services, IConfiguration configuration)
@@ -81,6 +85,11 @@ public static class DependencyInjection
                 };
             });
 
-        services.AddAuthorization();
+        // One policy per permission: [HasPermission(Permissions.Tracks.Create)] maps to the "tracks:create" policy.
+        services.AddAuthorization(options =>
+        {
+            foreach (var permission in Permissions.All)
+                options.AddPolicy(permission, policy => policy.RequireClaim(Permissions.ClaimType, permission));
+        });
     }
 }

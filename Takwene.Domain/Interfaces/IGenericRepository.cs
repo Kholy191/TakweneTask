@@ -1,5 +1,4 @@
 using Takwene.Domain.Common;
-using Takwene.Domain.Specifications;
 
 namespace Takwene.Domain.Interfaces;
 
@@ -17,7 +16,7 @@ public interface IGenericRepository<T> where T : BaseEntity
     Task<TResult?> FirstOrDefaultAsync<TResult>(ISpecification<T, TResult> spec, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TResult>> ListAsync<TResult>(ISpecification<T, TResult> spec, CancellationToken cancellationToken = default);
 
-    // Count and Any use the criteria only (paging and sorting are ignored).
+    // Count and Any use filters and search only (paging and sorting are ignored).
     Task<int> CountAsync(ISpecification<T> spec, CancellationToken cancellationToken = default);
     Task<bool> AnyAsync(ISpecification<T> spec, CancellationToken cancellationToken = default);
 

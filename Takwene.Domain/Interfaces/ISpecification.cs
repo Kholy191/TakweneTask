@@ -1,11 +1,15 @@
 using System.Linq.Expressions;
+using Takwene.Domain.Specifications;
 
-namespace Takwene.Domain.Specifications;
+namespace Takwene.Domain.Interfaces;
 
-// Describes a query (filter, includes, sorting, paging) without depending on EF Core.
+// Describes a query (filter, search, includes, sorting, paging) without depending on EF Core.
 public interface ISpecification<T>
 {
     Expression<Func<T, bool>>? Criteria { get; }
+
+    // Case-insensitive "contains" searches, OR-ed together; translated to ILIKE by Infrastructure.
+    List<SearchExpression<T>> SearchExpressions { get; }
 
     List<Expression<Func<T, object>>> Includes { get; }
 
@@ -24,10 +28,4 @@ public interface ISpecification<T>
 
     // Splits multiple collection includes into separate SQL queries.
     bool IsSplitQuery { get; }
-}
-
-// Specification that projects T into TResult (e.g. a DTO) in SQL.
-public interface ISpecification<T, TResult> : ISpecification<T>
-{
-    Expression<Func<T, TResult>> Selector { get; }
 }

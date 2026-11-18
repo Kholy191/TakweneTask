@@ -1,51 +1,50 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Takwene.Application.Auth;
+using Takwene.Application.DTOs.Auth;
 using Takwene.Application.Interfaces;
 
 namespace Takwene.API.Controllers;
 
+// Accounts are created by admins (POST /api/artists); there is no public sign-up.
 [Route("api/auth")]
 public sealed class AuthController(IAuthService authService, ICurrentUserService currentUser) : ApiControllerBase
 {
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequest request, CancellationToken cancellationToken)
-    {
-        var result = await authService.RegisterUserAsync(request, cancellationToken);
-        return result.IsSuccess
-            ? StatusCode(StatusCodes.Status201Created, new { userId = result.Value })
-            : HandleFailure(result.Error);
-    }
-
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
+    [EndpointName("Login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<AuthResponse>> Login(LoginRequest request, CancellationToken cancellationToken)
     {
         var result = await authService.LoginAsync(request, cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : HandleFailure(result.Error);
     }
 
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh(RefreshTokenRequest request, CancellationToken cancellationToken)
+    [EndpointName("RefreshToken")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<AuthResponse>> Refresh(RefreshTokenRequest request, CancellationToken cancellationToken)
     {
         var result = await authService.RefreshTokenAsync(request, cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : HandleFailure(result.Error);
     }
 
-    // Logout: revokes the given refresh token.
-    [HttpPost("revoke")]
-    public async Task<IActionResult> Revoke(RefreshTokenRequest request, CancellationToken cancellationToken)
+    // No access token required, so a user whose token expired can still log out; the refresh token is the proof.
+    [HttpPost("logout")]
+    [EndpointName("Logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Logout(RefreshTokenRequest request, CancellationToken cancellationToken)
     {
         var result = await authService.RevokeRefreshTokenAsync(request, cancellationToken);
         return result.IsSuccess ? NoContent() : HandleFailure(result.Error);
     }
 
-    // Quick check that the access token works.
     [Authorize]
     [HttpGet("me")]
-    public IActionResult Me() => Ok(new
-    {
-        userId = currentUser.UserId,
-        name = User.Identity?.Name,
-        roles = User.FindAll("role").Select(c => c.Value)
-    });
+    [EndpointName("GetCurrentUser")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public ActionResult<CurrentUserResponse> Me() => Ok(new CurrentUserResponse(
+        currentUser.UserId,
+        currentUser.ArtistId,
+        currentUser.IsAdmin,
+        currentUser.GetRoles(),
+        currentUser.GetPermissions()));
 }

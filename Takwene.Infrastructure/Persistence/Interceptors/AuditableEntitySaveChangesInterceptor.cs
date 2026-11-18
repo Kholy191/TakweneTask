@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Takwene.Application.Interfaces;
-using Takwene.Domain.Common;
+using Takwene.Domain.Interfaces;
 
 namespace Takwene.Infrastructure.Persistence.Interceptors;
 

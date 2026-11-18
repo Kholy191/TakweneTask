@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Takwene.Domain.Common;
 using Takwene.Domain.Interfaces;
-using Takwene.Domain.Specifications;
 
 namespace Takwene.Infrastructure.Persistence.Repositories;
 

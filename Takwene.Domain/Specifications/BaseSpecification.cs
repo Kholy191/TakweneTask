@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Takwene.Domain.Interfaces;
 
 namespace Takwene.Domain.Specifications;
 
@@ -13,6 +14,7 @@ public abstract class BaseSpecification<T> : ISpecification<T>
     }
 
     public Expression<Func<T, bool>>? Criteria { get; }
+    public List<SearchExpression<T>> SearchExpressions { get; } = [];
     public List<Expression<Func<T, object>>> Includes { get; } = [];
     public List<string> IncludeStrings { get; } = [];
     public Expression<Func<T, object>>? OrderBy { get; private set; }
@@ -22,6 +24,9 @@ public abstract class BaseSpecification<T> : ISpecification<T>
     public bool IsPagingEnabled { get; private set; }
     public bool IsTracking { get; private set; } = true;
     public bool IsSplitQuery { get; private set; }
+
+    protected void AddSearch(Expression<Func<T, string>> selector, string term) =>
+        SearchExpressions.Add(new SearchExpression<T>(selector, term));
 
     protected void AddInclude(Expression<Func<T, object>> includeExpression) => Includes.Add(includeExpression);
 
@@ -42,16 +47,4 @@ public abstract class BaseSpecification<T> : ISpecification<T>
     protected void AsNoTracking() => IsTracking = false;
 
     protected void AsSplitQuery() => IsSplitQuery = true;
-}
-
-// Base class for projection specifications. Projected results are never tracked by EF Core.
-public abstract class BaseSpecification<T, TResult> : BaseSpecification<T>, ISpecification<T, TResult>
-{
-    protected BaseSpecification() { }
-
-    protected BaseSpecification(Expression<Func<T, bool>> criteria) : base(criteria) { }
-
-    public Expression<Func<T, TResult>> Selector { get; private set; } = null!;
-
-    protected void ApplySelector(Expression<Func<T, TResult>> selector) => Selector = selector;
 }
