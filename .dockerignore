@@ -1,0 +1,10 @@
+# Windows build output would break the Linux restore/publish.
+**/bin/
+**/obj/
+.vs/
+.git/
+_to_delete/
+**/*.user
+docker-compose*.yml
+Dockerfile
+.dockerignore

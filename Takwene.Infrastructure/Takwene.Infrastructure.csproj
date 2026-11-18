@@ -20,9 +20,9 @@
     <ProjectReference Include="..\Takwene.Application\Takwene.Application.csproj" />
   </ItemGroup>
 
-  <!-- JSON seed files are copied next to the API's binaries. -->
+  <!-- JSON seed files are copied next to the API's binaries, including the published (Docker) output. -->
   <ItemGroup>
-    <None Update="Persistence\Seeding\Data\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Persistence\Seeding\Data\**\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

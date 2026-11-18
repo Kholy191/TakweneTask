@@ -1,4 +1,16 @@
-# Local dependencies: PostgreSQL + Seq. Run with: docker compose up -d
+# Full stack for reviewers:  docker compose up --build
+#   Web (Angular): http://localhost:8080    API calls go through nginx, so no CORS or certificates
+#   API + Swagger: http://localhost:5243
+#   Seq (logs):    http://localhost:8081
+#   PostgreSQL:    localhost:5432  (postgres / postgres)
+#
+# The front-end is built from ../TakweneFrontEnd (clone both repos side by side),
+# or set FRONTEND_PATH to its folder.
+#
+# Local development still works: "docker compose up -d postgres seq", then run the API from
+# Visual Studio (https://localhost:7000) and the front-end with "npm start" (http://localhost:4200).
+name: takwene
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -11,6 +23,11 @@ services:
       - "5432:5432"
     volumes:
       - takwene-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d takwene"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   seq:
     image: datalust/seq:latest
@@ -19,7 +36,37 @@ services:
       ACCEPT_EULA: "Y"
       SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
     ports:
-      - "5341:80" # UI and log ingestion: http://localhost:5341
+      - "8081:80"     # UI
+      - "5341:5341"   # log ingestion (the API run from Visual Studio uses http://localhost:5341)
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: takwene-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      seq:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=takwene;Username=postgres;Password=postgres"
+      # Demo-only signing key; use a secret store for a real deployment.
+      Jwt__Key: "docker-demo-signing-key-change-me-0123456789-abcdefghijkl"
+      # Serilog:WriteTo:1 is the Seq sink in appsettings.json.
+      Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
+    ports:
+      - "5243:8080"
+
+  web:
+    build:
+      context: ${FRONTEND_PATH:-../TakweneFrontEnd}
+    container_name: takwene-web
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
 
 volumes:
   takwene-pgdata:

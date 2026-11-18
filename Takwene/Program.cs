@@ -58,7 +58,10 @@ try
         options.RoutePrefix = string.Empty;
     });
 
-    app.UseHttpsRedirection();
+    // Containers serve plain HTTP on 8080 (nginx sits in front), so only redirect when running on the host.
+    if (!app.Configuration.GetValue<bool>("DOTNET_RUNNING_IN_CONTAINER"))
+        app.UseHttpsRedirection();
+
     app.UseCors();
     app.UseAuthentication();
     app.UseAuthorization();
