@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Takwene.Domain/Takwene.Domain.csproj" />
+  <Project Path="Takwene.Application/Takwene.Application.csproj" />
+  <Project Path="Takwene.Infrastructure/Takwene.Infrastructure.csproj" />
+  <Project Path="Takwene/Takwene.API.csproj" />
+</Solution>

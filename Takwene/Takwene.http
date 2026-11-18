@@ -1,0 +1,40 @@
+@Takwene_HostAddress = https://localhost:7000
+
+### Register
+POST {{Takwene_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Test User",
+  "email": "test@takwene.local",
+  "password": "Test@12345"
+}
+
+### Login (seeded admin; copy accessToken and refreshToken from the response)
+POST {{Takwene_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@takwene.local",
+  "password": "Admin@12345"
+}
+
+### Who am I
+GET {{Takwene_HostAddress}}/api/auth/me
+Authorization: Bearer <accessToken>
+
+### Refresh (rotates: the old refresh token stops working)
+POST {{Takwene_HostAddress}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "<refreshToken>"
+}
+
+### Revoke (logout)
+POST {{Takwene_HostAddress}}/api/auth/revoke
+Content-Type: application/json
+
+{
+  "refreshToken": "<refreshToken>"
+}
